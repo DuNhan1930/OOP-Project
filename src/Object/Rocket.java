@@ -10,6 +10,13 @@ import java.awt.geom.Path2D;
 import javax.swing.ImageIcon;
 
 public class Rocket extends HpRender {
+    public static final double ROCKET_SIZE = 50;
+    private double x;
+    private double y;
+    private float speed = 0.3f;
+    private float angle = 0;
+    private final Image image;
+    private final Area rocketShap;
 
     public Rocket() {
         super(new HP(20, 20));
@@ -23,14 +30,6 @@ public class Rocket extends HpRender {
         p.lineTo(15, ROCKET_SIZE - 10);
         rocketShap = new Area(p);
     }
-
-    public static final double ROCKET_SIZE = 50;
-    private double x;
-    private double y;
-    private final float speed = 0.3f;
-    private float angle = 0;
-    private final Image image;
-    private final Area rocketShap;
 
     public void changeLocation(double x, double y) {
         this.x = x;
@@ -60,11 +59,6 @@ public class Rocket extends HpRender {
         Shape shap = getShape();
         hpRender(g2, shap, y);
         g2.setTransform(oldTransform);
-
-        //  Test
-        // g2.setColor(new Color(36, 214, 63));
-        // g2.draw(shap);
-        // g2.draw(shap.getBounds2D());
     }
 
     public double getX() {
@@ -93,6 +87,14 @@ public class Rocket extends HpRender {
         } else {
             return true;
         }
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    public float getSpeed() {
+        return speed;
     }
 
 }
