@@ -5,9 +5,11 @@ import Object.Effect;
 import Object.Player;
 import Object.Rocket;
 import Object.Sound.Sound;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -42,6 +44,11 @@ public class PanelGame extends JComponent {
     private List<Rocket> rockets;
     private List<Effect> boomEffects;
     private int score = 0;
+    private List<Star> stars = new ArrayList<>();
+    private float currentRocketSpeed = 0.3f;
+
+    // Thêm biến để kiểm tra trạng thái game
+    private boolean gameStarted = false;
 
     public void start() {
         width = getWidth();
@@ -50,13 +57,18 @@ public class PanelGame extends JComponent {
         g2 = image.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        initStars();
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (start) {
                     long startTime = System.nanoTime();
                     drawBackground();
-                    drawGame();
+                    if (gameStarted) {
+                        drawGame();
+                    } else {
+                        drawStartScreen();
+                    }
                     render();
                     long time = System.nanoTime() - startTime;
                     if (time < TARGET_TIME) {
@@ -72,18 +84,45 @@ public class PanelGame extends JComponent {
         thread.start();
     }
 
+    private void checkAndUpdateRocketSpeed() {
+        float newSpeed = 0.3f + (score / 2) * 0.05f;
+        
+        if (newSpeed != currentRocketSpeed) {
+            currentRocketSpeed = newSpeed;
+            for (Rocket rocket : rockets) {
+                rocket.setSpeed(currentRocketSpeed);
+            }
+            System.out.println("Score: " + score + " - New Speed: " + newSpeed);
+        }
+    }
+
     private void addRocket() {
         Random ran = new Random();
-        int locationY = ran.nextInt(height - 50) + 25;
-        Rocket rocket = new Rocket();
-        rocket.changeLocation(0, locationY);
-        rocket.changeAngle(0);
-        rockets.add(rocket);
-        int locationY2 = ran.nextInt(height - 50) + 25;
-        Rocket rocket2 = new Rocket();
-        rocket2.changeLocation(width, locationY2);
-        rocket2.changeAngle(180);
-        rockets.add(rocket2);
+        int numRockets = 2 + (score / 2);
+        
+        if (numRockets > 10) {
+            numRockets = 10;
+        }
+        
+        for (int i = 0; i < numRockets/2; i++) {
+            int locationY = ran.nextInt(height - 50) + 25;
+            Rocket rocket = new Rocket();
+            rocket.changeLocation(0, locationY);
+            rocket.changeAngle(0);
+            rocket.setSpeed(currentRocketSpeed);
+            rockets.add(rocket);
+        }
+        
+        for (int i = 0; i < numRockets/2; i++) {
+            int locationY = ran.nextInt(height - 50) + 25;
+            Rocket rocket = new Rocket();
+            rocket.changeLocation(width, locationY);
+            rocket.changeAngle(180);
+            rocket.setSpeed(currentRocketSpeed);
+            rockets.add(rocket);
+        }
+        
+        System.out.println("Score: " + score + " - Rockets per wave: " + numRockets);
     }
 
     private void initObjectGame() {
@@ -105,10 +144,12 @@ public class PanelGame extends JComponent {
 
     private void resetGame() {
         score = 0;
+        currentRocketSpeed = 0.3f;
         rockets.clear();
         bullets.clear();
         player.changeLocation(150, 150);
         player.reset();
+        gameStarted = false; // Reset về màn hình bắt đầu
     }
 
     private void initKeyboard() {
@@ -117,35 +158,44 @@ public class PanelGame extends JComponent {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_A) {
-                    key.setKey_left(true);
-                } else if (e.getKeyCode() == KeyEvent.VK_D) {
-                    key.setKey_right(true);
-                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    key.setKey_space(true);
-                } else if (e.getKeyCode() == KeyEvent.VK_J) {
-                    key.setKey_j(true);
-                } else if (e.getKeyCode() == KeyEvent.VK_K) {
-                    key.setKey_k(true);
-                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    key.setKey_enter(true);
+                if (!gameStarted && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    gameStarted = true;
+                    return;
+                }
+                
+                if (gameStarted) {
+                    if (e.getKeyCode() == KeyEvent.VK_A) {
+                        key.setKey_left(true);
+                    } else if (e.getKeyCode() == KeyEvent.VK_D) {
+                        key.setKey_right(true);
+                    } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                        key.setKey_space(true);
+                    } else if (e.getKeyCode() == KeyEvent.VK_J) {
+                        key.setKey_j(true);
+                    } else if (e.getKeyCode() == KeyEvent.VK_K) {
+                        key.setKey_k(true);
+                    } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        key.setKey_enter(true);
+                    }
                 }
             }
-
+            
             @Override
             public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_A) {
-                    key.setKey_left(false);
-                } else if (e.getKeyCode() == KeyEvent.VK_D) {
-                    key.setKey_right(false);
-                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    key.setKey_space(false);
-                } else if (e.getKeyCode() == KeyEvent.VK_J) {
-                    key.setKey_j(false);
-                } else if (e.getKeyCode() == KeyEvent.VK_K) {
-                    key.setKey_k(false);
-                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    key.setKey_enter(false);
+                if (gameStarted) {
+                    if (e.getKeyCode() == KeyEvent.VK_A) {
+                        key.setKey_left(false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_D) {
+                        key.setKey_right(false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                        key.setKey_space(false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_J) {
+                        key.setKey_j(false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_K) {
+                        key.setKey_k(false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        key.setKey_enter(false);
+                    }
                 }
             }
         });
@@ -167,7 +217,7 @@ public class PanelGame extends JComponent {
                                 if (key.isKey_j()) {
                                     bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
                                 } else {
-                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 20, 3f));
+                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 3f));
                                 }
                                 sound.soundShoot();
                             }
@@ -254,6 +304,7 @@ public class PanelGame extends JComponent {
                     boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
                     if (!rocket.updateHP(bullet.getSize())) {
                         score++;
+                        checkAndUpdateRocketSpeed();
                         rockets.remove(rocket);
                         sound.soundDestroy();
                         double x = rocket.getX() + Rocket.ROCKET_SIZE / 2;
@@ -307,8 +358,19 @@ public class PanelGame extends JComponent {
     }
 
     private void drawBackground() {
-        g2.setColor(new Color(30, 30, 30));
+        GradientPaint gp = new GradientPaint(
+            0, 0, new Color(0, 0, 20), 
+            0, height, new Color(20, 20, 40)
+        );
+        g2.setPaint(gp);
         g2.fillRect(0, 0, width, height);
+        
+        for (Star star : stars) {
+            star.update();
+            star.draw(g2);
+        }
+        
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
     private void drawGame() {
@@ -338,7 +400,7 @@ public class PanelGame extends JComponent {
         g2.drawString("Score : " + score, 10, 20);
         if (!player.isAlive()) {
             String text = "GAME OVER";
-            String textKey = "Press key enter to Continue ...";
+            String textKey = "Press Enter to Continue ...";
             g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
             FontMetrics fm = g2.getFontMetrics();
             Rectangle2D r2 = fm.getStringBounds(text, g2);
@@ -369,6 +431,69 @@ public class PanelGame extends JComponent {
             Thread.sleep(speed);
         } catch (InterruptedException ex) {
             System.err.println(ex);
+        }
+    }
+
+    private void initStars() {
+        stars.clear();
+        Random rand = new Random();
+        int numStars = rand.nextInt(100) + 100;
+        for (int i = 0; i < numStars; i++) {
+            stars.add(new Star());
+        }
+    }
+
+    private void drawStartScreen() {
+        g2.setColor(Color.WHITE);
+        
+        // Vẽ tiêu đề game
+        g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
+        String title = "PLANE AND ROCKET";
+        FontMetrics fm = g2.getFontMetrics();
+        int titleX = (width - fm.stringWidth(title)) / 2;
+        g2.drawString(title, titleX, height / 3);
+        
+        // Vẽ hướng dẫn điều khiển
+        g2.setFont(getFont().deriveFont(Font.PLAIN, 20f));
+        String[] controls = {
+            "Controls:",
+            "A/D - Rotate ship",
+            "SPACE - Speed up",
+            "J - Small bullet",
+            "K - Big bullet",
+            "",
+            "Press ENTER to start"
+        };
+        
+        fm = g2.getFontMetrics();
+        int y = height / 2;
+        for (String line : controls) {
+            int x = (width - fm.stringWidth(line)) / 2;
+            g2.drawString(line, x, y);
+            y += fm.getHeight() + 10;
+        }
+    }
+
+    private class Star {
+        int x, y;
+        float alpha = 1.0f;
+        float size;
+        
+        public Star() {
+            Random rand = new Random();
+            x = rand.nextInt(width);
+            y = rand.nextInt(height);
+            size = rand.nextFloat() * 2 + 1;
+        }
+        
+        public void update() {
+            alpha = (float) (0.5f + Math.random() * 0.5f);
+        }
+        
+        public void draw(Graphics2D g2) {
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+            g2.setColor(Color.WHITE);
+            g2.fill(new Rectangle2D.Double(x, y, size, size));
         }
     }
 }
