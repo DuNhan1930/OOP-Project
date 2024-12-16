@@ -302,7 +302,7 @@ public class PanelGame extends JComponent {
                 area.intersect(rocket.getShape());
                 if (!area.isEmpty()) {
                     boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
-                    if (!rocket.updateHP(bullet.getSize())) {
+                    if (!rocket.updateHP(bullet.getSize() + 5)) {
                         score++;
                         checkAndUpdateRocketSpeed();
                         rockets.remove(rocket);
