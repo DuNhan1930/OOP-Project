@@ -1,6 +1,8 @@
 package Object;
 
 public class ModelBoom {
+    private double size;
+    private float angle;
 
     public double getSize() {
         return size;
@@ -25,7 +27,4 @@ public class ModelBoom {
 
     public ModelBoom() {
     }
-
-    private double size;
-    private float angle;
 }

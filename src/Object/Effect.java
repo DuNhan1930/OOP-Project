@@ -9,7 +9,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.Random;
 
 public class Effect {
-
     private final double x;
     private final double y;
     private final double max_distance;

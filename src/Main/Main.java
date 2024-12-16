@@ -7,7 +7,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 
 public class Main extends JFrame {
-
     public Main() {
         init();
     }

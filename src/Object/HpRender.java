@@ -6,7 +6,6 @@ import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 
 public class HpRender {
-
     private final HP hp;
 
     public HpRender(HP hp) {

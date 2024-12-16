@@ -1,6 +1,8 @@
 package Object;
 
 public class HP {
+    private double MAX_HP;
+    private double currentHp;
 
     public double getMAX_HP() {
         return MAX_HP;
@@ -25,7 +27,4 @@ public class HP {
 
     public HP() {
     }
-
-    private double MAX_HP;
-    private double currentHp;
 }

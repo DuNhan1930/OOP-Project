@@ -11,7 +11,6 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class Sound {
-
     private final URL shoot;
     private final URL hit;
     private final URL destroy;

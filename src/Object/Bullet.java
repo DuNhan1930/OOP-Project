@@ -8,7 +8,6 @@ import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 
 public class Bullet {
-
     private double x;
     private double y;
     private final Shape shape;

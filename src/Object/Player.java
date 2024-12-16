@@ -8,6 +8,17 @@ import java.awt.geom.Path2D;
 import javax.swing.ImageIcon;
 
 public class Player extends HpRender {
+    public static final double PLAYER_SIZE = 64;
+    private double x;
+    private double y;
+    private final float MAX_SPEED = 1f;
+    private float speed = 0f;
+    private float angle = 0f;
+    private final Area playerShap;
+    private final Image image;
+    private final Image image_speed;
+    private boolean speedUp;
+    private boolean alive = true;
 
     public Player() {
         super(new HP(50, 50));
@@ -21,18 +32,6 @@ public class Player extends HpRender {
         p.lineTo(0, PLAYER_SIZE - 15);
         playerShap = new Area(p);
     }
-
-    public static final double PLAYER_SIZE = 64;
-    private double x;
-    private double y;
-    private final float MAX_SPEED = 1f;
-    private float speed = 0f;
-    private float angle = 0f;
-    private final Area playerShap;
-    private final Image image;
-    private final Image image_speed;
-    private boolean speedUp;
-    private boolean alive = true;
 
     public void changeLocation(double x, double y) {
         this.x = x;

@@ -1,6 +1,12 @@
 package Component;
 
 public class Key {
+    private boolean key_right;
+    private boolean key_left;
+    private boolean key_space;
+    private boolean key_j;
+    private boolean key_k;
+    private boolean key_enter;
 
     public boolean isKey_enter() {
         return key_enter;
@@ -49,11 +55,4 @@ public class Key {
     public void setKey_k(boolean key_k) {
         this.key_k = key_k;
     }
-
-    private boolean key_right;
-    private boolean key_left;
-    private boolean key_space;
-    private boolean key_j;
-    private boolean key_k;
-    private boolean key_enter;
 }
