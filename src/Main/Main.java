@@ -13,7 +13,7 @@ public class Main extends JFrame {
     }
 
     private void init() {
-        setTitle("Java 2D Game");
+        setTitle("Plane and Rocket - OOP Project");
         setSize(1366, 768);
         setLocationRelativeTo(null);
         setResizable(false);
