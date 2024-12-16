@@ -5,7 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
-import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
 
 public class Bullet {
 
@@ -25,7 +25,15 @@ public class Bullet {
         this.angle = angle;
         this.size = size;
         this.speed = speed;
-        shape = new Ellipse2D.Double(0, 0, size, size);
+        
+        // Tạo hình tam giác
+        Path2D triangle = new Path2D.Double();
+        triangle.moveTo(0, 0);           // Điểm dưới
+        triangle.lineTo(size/2, size);         // Điểm trên
+        triangle.lineTo(size, 0);        // Điểm dưới phải
+        triangle.closePath();               // Nối về điểm đầu
+        
+        this.shape = triangle;
     }
 
     public void update() {
@@ -45,12 +53,21 @@ public class Bullet {
         AffineTransform oldTransform = g2.getTransform();
         g2.setColor(color);
         g2.translate(x, y);
+        
+        // Xoay tam giác theo hướng bay
+        AffineTransform at = new AffineTransform();
+        at.rotate(Math.toRadians(angle - 90), size/2, size/2);
+        g2.transform(at);
+        
         g2.fill(shape);
         g2.setTransform(oldTransform);
     }
 
     public Shape getShape() {
-        return new Area(new Ellipse2D.Double(x, y, size, size));
+        AffineTransform at = new AffineTransform();
+        at.translate(x, y);
+        at.rotate(Math.toRadians(angle - 90), size/2, size/2);
+        return new Area(at.createTransformedShape(shape));
     }
 
     public double getX() {
