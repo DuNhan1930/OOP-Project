@@ -25,12 +25,12 @@ public class Bullet {
         this.size = size;
         this.speed = speed;
         
-        // Tạo hình tam giác
+        // Create triangle shape
         Path2D triangle = new Path2D.Double();
-        triangle.moveTo(0, 0);           // Điểm dưới
-        triangle.lineTo(size/2, size);         // Điểm trên
-        triangle.lineTo(size, 0);        // Điểm dưới phải
-        triangle.closePath();               // Nối về điểm đầu
+        triangle.moveTo(0, 0);           // Bottom point
+        triangle.lineTo(size/2, size);   // Top point
+        triangle.lineTo(size, 0);        // Bottom right point
+        triangle.closePath();            // Connect to starting point
         
         this.shape = triangle;
     }
@@ -53,7 +53,7 @@ public class Bullet {
         g2.setColor(color);
         g2.translate(x, y);
         
-        // Xoay tam giác theo hướng bay
+        // Rotate triangle in the direction of movement
         AffineTransform at = new AffineTransform();
         at.rotate(Math.toRadians(angle - 90), size/2, size/2);
         g2.transform(at);
