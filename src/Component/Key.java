@@ -1,13 +1,23 @@
 package Component;
 
+/**
+ * Class to handle keyboard input states for game controls
+ */
 public class Key {
-    private boolean key_right;
-    private boolean key_left;
-    private boolean key_space;
-    private boolean key_j;
-    private boolean key_k;
-    private boolean key_enter;
-    private boolean key_r;
+    // Movement controls
+    private boolean key_right;    // D key - rotate right
+    private boolean key_left;     // A key - rotate left
+    private boolean key_space;    // Spacebar - speed up
+    
+    // Weapon controls
+    private boolean key_j;        // J key - fire small bullet
+    private boolean key_k;        // K key - fire big bullet
+    
+    // System controls
+    private boolean key_enter;    // Enter key - start/restart game
+    private boolean key_r;        // R key - reset high score
+
+    // Getters and setters for key states
     public boolean isKey_enter() {
         return key_enter;
     }
