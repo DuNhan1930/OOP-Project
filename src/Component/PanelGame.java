@@ -24,6 +24,7 @@ import java.util.Random;
 import javax.swing.JComponent;
 
 public class PanelGame extends JComponent {
+
     private Graphics2D g2;
     private BufferedImage image;
     private int width;
