@@ -4,7 +4,9 @@ import Object.Bullet;
 import Object.Effect;
 import Object.Player;
 import Object.Rocket;
+import Object.Star;
 import Object.Sound.Sound;
+import Object.BulletFactory;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
@@ -22,35 +24,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javax.swing.JComponent;
+import java.io.*;
 
 public class PanelGame extends JComponent {
 
+    // Graphics and rendering variables
     private Graphics2D g2;
     private BufferedImage image;
     private int width;
     private int height;
     private Thread thread;
-    private boolean start = true;
+    private final boolean start = true;
     private Key key;
     private int shotTime;
 
-    //  Game FPS
+    // Game FPS settings
     private final int FPS = 60;
     private final int TARGET_TIME = 1000000000 / FPS;
-    //  Game Object
-    private Sound sound;
-    private Player player;
-    private List<Bullet> bullets;
-    private List<Rocket> rockets;
-    private List<Effect> boomEffects;
-    private int score = 0;
-    private List<Star> stars = new ArrayList<>();
-    private float currentRocketSpeed = 0.3f;
 
-    // Thêm biến để kiểm tra trạng thái game
+    // Main game objects
+    private Sound sound;              // Game sounds
+    private Player player;            // Player ship
+    private List<Bullet> bullets;     // List of bullets
+    private List<Rocket> rockets;     // List of enemy rockets
+    private List<Effect> boomEffects; // Explosion effects
+    private int score = 0;            // Player score
+    private List<Star> stars = new ArrayList<>();  // Background stars
+    private float currentRocketSpeed = 0.3f;       // Current rocket speed
+
+    // Game state
     private boolean gameStarted = false;
+    private int highestScore = 0; // Biến lưu điểm cao nhất
 
+    /**
+     * Initialize game and start the game loop
+     */
     public void start() {
+        loadHighScore();
         width = getWidth();
         height = getHeight();
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -84,6 +94,10 @@ public class PanelGame extends JComponent {
         thread.start();
     }
 
+    /**
+     * Update rocket speed based on current score
+     * Speed increases as score gets higher
+     */
     private void checkAndUpdateRocketSpeed() {
         float newSpeed = 0.3f + (score / 2) * 0.05f;
         
@@ -92,10 +106,15 @@ public class PanelGame extends JComponent {
             for (Rocket rocket : rockets) {
                 rocket.setSpeed(currentRocketSpeed);
             }
-            System.out.println("Score: " + score + " - New Speed: " + newSpeed);
+            //System.out.println("Score: " + score + " - New Speed: " + newSpeed);
         }
     }
 
+    /**
+     * Add new rockets to the game
+     * Number of rockets increases with score
+     * Rockets spawn from both sides of the screen
+     */
     private void addRocket() {
         Random ran = new Random();
         int numRockets = 2 + (score / 2);
@@ -122,9 +141,12 @@ public class PanelGame extends JComponent {
             rockets.add(rocket);
         }
         
-        System.out.println("Score: " + score + " - Rockets per wave: " + numRockets);
+        //System.out.println("Score: " + score + " - Rockets per wave: " + numRockets);
     }
 
+    /**
+     * Initialize all game objects and start rocket spawning thread
+     */
     private void initObjectGame() {
         sound = new Sound();
         player = new Player();
@@ -135,13 +157,19 @@ public class PanelGame extends JComponent {
             @Override
             public void run() {
                 while (start) {
-                    addRocket();
+                    if (gameStarted) {
+                        addRocket();
+                    }
                     sleep(3000);
                 }
             }
         }).start();
     }
 
+    /**
+     * Reset game to initial state
+     * Clears all objects and resets score
+     */
     private void resetGame() {
         score = 0;
         currentRocketSpeed = 0.3f;
@@ -152,15 +180,23 @@ public class PanelGame extends JComponent {
         gameStarted = false; // Reset về màn hình bắt đầu
     }
 
+    /**
+     * Initialize keyboard controls and input handling
+     * Sets up continuous movement and shooting
+     */
     private void initKeyboard() {
         key = new Key();
         requestFocus();
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (!gameStarted && e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    gameStarted = true;
-                    return;
+                if (!gameStarted) {
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        gameStarted = true;
+                        return;
+                    } else if (e.getKeyCode() == KeyEvent.VK_R) {
+                        resetHighScore(); // Đặt lại điểm cao nhất khi nhấn phím 'R' từ màn hình bắt đầu
+                    }
                 }
                 
                 if (gameStarted) {
@@ -215,9 +251,9 @@ public class PanelGame extends JComponent {
                         if (key.isKey_j() || key.isKey_k()) {
                             if (shotTime == 0) {
                                 if (key.isKey_j()) {
-                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
+                                    bullets.add(BulletFactory.createBullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
                                 } else {
-                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 3f));
+                                    bullets.add(0, BulletFactory.createBullet(player.getX(), player.getY(), player.getAngle(), 15, 3f));
                                 }
                                 sound.soundShoot();
                             }
@@ -259,6 +295,10 @@ public class PanelGame extends JComponent {
         }).start();
     }
 
+    /**
+     * Initialize bullet system and management thread
+     * Handles bullet movement and cleanup
+     */
     private void initBullets() {
         bullets = new ArrayList<>();
         new Thread(new Runnable() {
@@ -294,35 +334,60 @@ public class PanelGame extends JComponent {
         }).start();
     }
 
+    /**
+     * Check collisions between bullets and rockets
+     * Handles damage, destruction and effects
+     */
     private void checkBullets(Bullet bullet) {
+        // Iterate through all rockets in the list
         for (int i = 0; i < rockets.size(); i++) {
             Rocket rocket = rockets.get(i);
             if (rocket != null) {
+                // Create an Area object for the bullet and check for intersection with the rocket
                 Area area = new Area(bullet.getShape());
                 area.intersect(rocket.getShape());
+                
+                // If there is an intersection between the bullet and the rocket
                 if (!area.isEmpty()) {
+                    // Add an explosion effect at the bullet's position
                     boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
+                    
+                    // Check and update the rocket's HP
                     if (!rocket.updateHP(bullet.getSize() + 5)) {
+                        // Increase the score when the rocket is destroyed
                         score++;
+                        // Update rocket speed based on the new score
                         checkAndUpdateRocketSpeed();
+                        // Remove the rocket from the list
                         rockets.remove(rocket);
+                        // Play destruction sound
                         sound.soundDestroy();
+                        
+                        // Calculate the center position of the rocket for explosion effects
                         double x = rocket.getX() + Rocket.ROCKET_SIZE / 2;
                         double y = rocket.getY() + Rocket.ROCKET_SIZE / 2;
+                        
+                        // Add multiple explosion effects at the rocket's position
                         boomEffects.add(new Effect(x, y, 5, 5, 75, 0.05f, new Color(32, 178, 169)));
                         boomEffects.add(new Effect(x, y, 5, 5, 75, 0.1f, new Color(32, 178, 169)));
                         boomEffects.add(new Effect(x, y, 10, 10, 100, 0.3f, new Color(230, 207, 105)));
                         boomEffects.add(new Effect(x, y, 10, 5, 100, 0.5f, new Color(255, 70, 70)));
                         boomEffects.add(new Effect(x, y, 10, 5, 150, 0.2f, new Color(255, 255, 255)));
                     } else {
+                        // Play hit sound if the rocket is not completely destroyed
                         sound.soundHit();
                     }
+                    // Remove the bullet from the list after the collision
                     bullets.remove(bullet);
                 }
             }
         }
     }
 
+    /**
+     * Check collisions between player and rockets
+     * Handles player damage and game over condition
+     */
     private void checkPlayer(Rocket rocket) {
         if (rocket != null) {
             Area area = new Area(player.getShape());
@@ -357,48 +422,76 @@ public class PanelGame extends JComponent {
 
     }
 
+    /**
+     * Draw game background with gradient and stars
+     * Creates space-like atmosphere
+     */
     private void drawBackground() {
+        // Create a gradient paint from dark blue to a lighter blue
         GradientPaint gp = new GradientPaint(
             0, 0, new Color(0, 0, 20), 
             0, height, new Color(20, 20, 40)
         );
+        // Set the paint of the graphics context to the gradient
         g2.setPaint(gp);
+        // Fill the background with the gradient
         g2.fillRect(0, 0, width, height);
         
+        // Update and draw each star in the stars collection
         for (Star star : stars) {
-            star.update();
-            star.draw(g2);
+            star.update(); // Update the star's position or state
+            star.draw(g2); // Draw the star on the graphics context
         }
         
+        // Reset the composite to fully opaque
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
+    /**
+     * Draw all game objects
+     * Includes player, bullets, rockets, effects and UI
+     */
     private void drawGame() {
+        // Check if the player is alive
         if (player.isAlive()) {
+            // Draw the player on the screen
             player.draw(g2);
         }
+        
+        // Draw each bullet in the bullets list
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
             if (bullet != null) {
                 bullet.draw(g2);
             }
         }
+        
+        // Draw each rocket in the rockets list
         for (int i = 0; i < rockets.size(); i++) {
             Rocket rocket = rockets.get(i);
             if (rocket != null) {
                 rocket.draw(g2);
             }
         }
+        
+        // Draw each explosion effect in the boomEffects list
         for (int i = 0; i < boomEffects.size(); i++) {
             Effect boomEffect = boomEffects.get(i);
             if (boomEffect != null) {
                 boomEffect.draw(g2);
             }
         }
+        
+        // Set color and font to draw the score
         g2.setColor(Color.WHITE);
         g2.setFont(getFont().deriveFont(Font.BOLD, 15f));
+        // Draw the score on the screen
         g2.drawString("Score : " + score, 10, 20);
+        g2.drawString("Highest Score : " + highestScore, 10, 40);
+        
+        // If the player is not alive, display "GAME OVER" message
         if (!player.isAlive()) {
+            updateHighScore();
             String text = "GAME OVER";
             String textKey = "Press Enter to Continue ...";
             g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
@@ -408,7 +501,10 @@ public class PanelGame extends JComponent {
             double textHeight = r2.getHeight();
             double x = (width - textWidth) / 2;
             double y = (height - textHeight) / 2;
+            // Draw "GAME OVER" message in the center of the screen
             g2.drawString(text, (int) x, (int) y + fm.getAscent());
+            
+            // Draw instructions to press Enter to continue
             g2.setFont(getFont().deriveFont(Font.BOLD, 15f));
             fm = g2.getFontMetrics();
             r2 = fm.getStringBounds(textKey, g2);
@@ -420,12 +516,19 @@ public class PanelGame extends JComponent {
         }
     }
 
+    /**
+     * Render the current frame to screen
+     */
     private void render() {
         Graphics g = getGraphics();
         g.drawImage(image, 0, 0, null);
         g.dispose();
     }
 
+    /**
+     * Utility function to pause thread
+     * Used for controlling game timing
+     */
     private void sleep(long speed) {
         try {
             Thread.sleep(speed);
@@ -434,66 +537,91 @@ public class PanelGame extends JComponent {
         }
     }
 
+    /**
+     * Initialize background stars
+     * Creates random star pattern
+     */
     private void initStars() {
         stars.clear();
         Random rand = new Random();
         int numStars = rand.nextInt(100) + 100;
         for (int i = 0; i < numStars; i++) {
-            stars.add(new Star());
+            stars.add(new Star(width, height));
         }
     }
 
+    /**
+     * Draw the start screen with game title and control instructions
+     * This screen is shown before the game begins
+     */
     private void drawStartScreen() {
         g2.setColor(Color.WHITE);
         
-        // Vẽ tiêu đề game
+        // Draw game title centered at top third of screen
         g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
         String title = "PLANE AND ROCKET";
         FontMetrics fm = g2.getFontMetrics();
         int titleX = (width - fm.stringWidth(title)) / 2;
         g2.drawString(title, titleX, height / 3);
-        
-        // Vẽ hướng dẫn điều khiển
+
+        // Draw highest score below the title
+        g2.setFont(getFont().deriveFont(Font.PLAIN, 20f));
+        String highScoreText = "Highest Score: " + highestScore;
+        fm = g2.getFontMetrics();
+        int highScoreX = (width - fm.stringWidth(highScoreText)) / 2;
+        g2.drawString(highScoreText, highScoreX, height / 3 + fm.getHeight() + 10);
+
+        // Draw control instructions in center of screen
         g2.setFont(getFont().deriveFont(Font.PLAIN, 20f));
         String[] controls = {
             "Controls:",
             "A/D - Rotate ship",
-            "SPACE - Speed up",
+            "SPACE - Speed up", 
             "J - Small bullet",
             "K - Big bullet",
             "",
-            "Press ENTER to start"
+            "Press ENTER to start",
+            "Press R to reset highest score"
         };
         
+        // Center and draw each line of instructions
         fm = g2.getFontMetrics();
         int y = height / 2;
         for (String line : controls) {
             int x = (width - fm.stringWidth(line)) / 2;
             g2.drawString(line, x, y);
-            y += fm.getHeight() + 10;
+            y += fm.getHeight() + 10;  // Add spacing between lines
         }
     }
 
-    private class Star {
-        int x, y;
-        float alpha = 1.0f;
-        float size;
-        
-        public Star() {
-            Random rand = new Random();
-            x = rand.nextInt(width);
-            y = rand.nextInt(height);
-            size = rand.nextFloat() * 2 + 1;
+    private void updateHighScore() {
+        if (score > highestScore) {
+            highestScore = score;
+            saveHighScore(); // Lưu điểm cao nhất vào tệp
         }
-        
-        public void update() {
-            alpha = (float) (0.5f + Math.random() * 0.5f);
+    }
+
+    private void saveHighScore() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/Component/highscore.txt", false))) {
+            writer.write(String.valueOf(highestScore));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        
-        public void draw(Graphics2D g2) {
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
-            g2.setColor(Color.WHITE);
-            g2.fill(new Rectangle2D.Double(x, y, size, size));
+    }
+
+    private void loadHighScore() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/Component/highscore.txt"))) {
+            String line = reader.readLine();
+            if (line != null) {
+                highestScore = Integer.parseInt(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    private void resetHighScore() {
+        highestScore = 0;
+        saveHighScore();
     }
 }
