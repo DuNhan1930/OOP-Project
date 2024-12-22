@@ -7,7 +7,7 @@ public class Key {
     private boolean key_j;
     private boolean key_k;
     private boolean key_enter;
-
+    private boolean key_r;
     public boolean isKey_enter() {
         return key_enter;
     }
@@ -54,5 +54,13 @@ public class Key {
 
     public void setKey_k(boolean key_k) {
         this.key_k = key_k;
+    }
+
+    public boolean isKey_r() {
+        return key_r;
+    }
+
+    public void setKey_r(boolean key_r) {
+        this.key_r = key_r;
     }
 }
