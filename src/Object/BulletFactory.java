@@ -1,7 +1,13 @@
 package Object;
 
+import Object.Player;
+
 public class BulletFactory {
-    public static Bullet createBullet(double x, double y, float angle, double size, float speed) {
-        return new Bullet(x, y, angle, size, speed);
+    public static Bullet createStandardBullet(Player player) {
+        return new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f); // Standard bullet
+    }
+
+    public static Bullet createBigBullet(Player player) {
+        return new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 3f); // Big bullet
     }
 } 

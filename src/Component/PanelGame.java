@@ -5,6 +5,7 @@ import Object.Effect;
 import Object.Player;
 import Object.Rocket;
 import Object.Sound.Sound;
+import Object.BulletFactory;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
@@ -215,9 +216,11 @@ public class PanelGame extends JComponent {
                         if (key.isKey_j() || key.isKey_k()) {
                             if (shotTime == 0) {
                                 if (key.isKey_j()) {
-                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f));
+                                    // Create and add a standard bullet
+                                    bullets.add(0, BulletFactory.createStandardBullet(player));
                                 } else {
-                                    bullets.add(0, new Bullet(player.getX(), player.getY(), player.getAngle(), 15, 3f));
+                                    // Create and add a big bullet
+                                    bullets.add(0, BulletFactory.createBigBullet(player));
                                 }
                                 sound.soundShoot();
                             }
