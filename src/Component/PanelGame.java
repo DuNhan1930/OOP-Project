@@ -148,18 +148,27 @@ public class PanelGame extends JComponent {
      * Initialize all game objects and start rocket spawning thread
      */
     private void initObjectGame() {
+        // Initialize game sound system
         sound = new Sound();
+        
+        // Create player object and set starting position
         player = new Player();
         player.changeLocation(150, 150);
+        
+        // Initialize empty lists for rockets and explosion effects
         rockets = new ArrayList<>();
         boomEffects = new ArrayList<>();
+        
+        // Create and start a new thread for rocket spawning
         new Thread(new Runnable() {
             @Override
             public void run() {
                 while (start) {
+                    // Only spawn rockets if the game has started
                     if (gameStarted) {
                         addRocket();
                     }
+                    // Wait 3 seconds before next spawn
                     sleep(3000);
                 }
             }
@@ -578,7 +587,8 @@ public class PanelGame extends JComponent {
             "J - Small bullet",
             "K - Big bullet",
             "",
-            "Press ENTER to start"
+            "Press ENTER to start",
+            "Press R to reset Highest Score"
         };
         
         fm = g2.getFontMetrics();
