@@ -11,6 +11,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class Sound {
+    private static Sound instance;
     private final URL shoot;
     private final URL hit;
     private final URL destroy;
@@ -19,6 +20,13 @@ public class Sound {
         this.shoot = this.getClass().getClassLoader().getResource("Object/Sound/shoot.wav");
         this.hit = this.getClass().getClassLoader().getResource("Object/Sound/hit.wav");
         this.destroy = this.getClass().getClassLoader().getResource("Object/Sound/destroy.wav");
+    }
+
+    public static Sound getInstance() {
+        if (instance == null) {
+            instance = new Sound();
+        }
+        return instance;
     }
 
     public void soundShoot() {
