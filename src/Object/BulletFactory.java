@@ -1,7 +1,5 @@
 package Object;
 
-import Object.Player;
-
 public class BulletFactory {
     public static Bullet createStandardBullet(Player player) {
         return new Bullet(player.getX(), player.getY(), player.getAngle(), 5, 3f); // Standard bullet
